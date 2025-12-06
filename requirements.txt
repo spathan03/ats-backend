@@ -1,6 +1,7 @@
 flask
-gunicorn
+flask-cors
 pdfplumber
 python-docx
 PyPDF2
-flask-cors
+fuzzywuzzy
+python-Levenshtein
