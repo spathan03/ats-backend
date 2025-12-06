@@ -1,12 +1,13 @@
 from flask import Flask, request, jsonify
 from ats_engine import extract_text, calculate_ats_score
+from flask_cors import CORS
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
 
 @app.route("/score", methods=["POST"])
 def score():
@@ -29,11 +30,9 @@ def score():
         "result": result
     })
 
-
 @app.route("/")
 def home():
     return {"message": "ATS API working!"}
-
 
 if __name__ == "__main__":
     app.run(debug=True)
