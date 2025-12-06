@@ -1,45 +1,49 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
-from ats_engine import extract_text, calculate_ats_score
+from ats import ATSScorer
+import tempfile
 import os
 
 app = Flask(__name__)
-CORS(app)
 
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-
-@app.route("/score", methods=["POST"])
-def score():
-    try:
-        resume = request.files.get("resume")
-        jd = request.files.get("jd")
-
-        if not resume or not jd:
-            return jsonify({"error": "Resume or JD missing"}), 400
-
-        resume_path = os.path.join(UPLOAD_FOLDER, resume.filename)
-        jd_path = os.path.join(UPLOAD_FOLDER, jd.filename)
-
-        resume.save(resume_path)
-        jd.save(jd_path)
-
-        resume_text = extract_text(resume_path)
-        jd_text = extract_text(jd_path)
-
-        result = calculate_ats_score(resume_text, jd_text)
-
-        return jsonify({"status": "success", "result": result})
-
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
+scorer = ATSScorer()
 
 @app.route("/")
 def home():
-    return jsonify({"message": "ATS API working!"})
+    return {"status": "ATS API running successfully on Render!"}
 
+@app.route("/analyze", methods=["POST"])
+def analyze():
+    try:
+        if "resume" not in request.files or "jd" not in request.files:
+            return jsonify({"error": "Upload both resume and job description"}), 400
+
+        resume_file = request.files["resume"]
+        jd_file = request.files["jd"]
+
+        # Save temp files
+        with tempfile.NamedTemporaryFile(delete=False) as r:
+            resume_path = r.name
+            resume_file.save(resume_path)
+
+        with tempfile.NamedTemporaryFile(delete=False) as j:
+            jd_path = j.name
+            jd_file.save(jd_path)
+
+        # Read files using your ATS engine
+        from ats import DocumentReader
+        resume_text = DocumentReader.read_document(resume_path)
+        jd_text = DocumentReader.read_document(jd_path)
+
+        analysis = scorer.analyze_resume(resume_text, jd_text)
+
+        # Delete temp files
+        os.remove(resume_path)
+        os.remove(jd_path)
+
+        return jsonify(analysis)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)

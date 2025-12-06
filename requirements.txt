@@ -1,7 +1,12 @@
 flask
-flask-cors
 pdfplumber
-python-docx
 PyPDF2
-fuzzywuzzy
-python-Levenshtein
+pdf2image
+pillow
+pytesseract
+python-docx
+spacy
+scikit-learn
+sentence-transformers
+language-tool-python
+numpy
