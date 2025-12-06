@@ -1,4 +1,5 @@
 flask
+gunicorn
 pdfplumber
 python-docx
 PyPDF2
